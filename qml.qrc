@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>second.qml</file>
+        <file>svg/cash-register.svg</file>
+        <file>icons/light/file.svg</file>
+        <file>icons/light/comment-dots.svg</file>
+        <file>icons/light/angle-left.svg</file>
+        <file>svg/cash-register-normal.svg</file>
+        <file>svg/cash-register-alert.svg</file>
+        <file>icons/light/ellipsis-v.svg</file>
+        <file>icons/light/ellipsis-v-alt.svg</file>
+        <file>images/OC_flat.png</file>
+        <file>images/OC_green.png</file>
+        <file>images/OC_TCR.png</file>
+        <file>images/OC_white.png</file>
+        <file>images/OC.png</file>
+        <file>images/OCwhite.png</file>
+        <file>images/AppIcon.png</file>
+    </qresource>
+</RCC>
