@@ -1,26 +1,58 @@
 #include "systemtray.h"
 
+
 SystemTray::SystemTray(QObject *parent) : QObject(parent),
     trayIcon(new QSystemTrayIcon()),
     normalIcon(QIcon(QString(":/images/OCwhite.png"))),
-    alertIcon(QIcon(QString(":/svg/cash-register-alert.svg"))),
-    trayMenu(new QMenu())
+    alertIcon(QIcon(QString(":/images/OC_green.png"))),
+    trayMenu(new QMenu()),
+    mEngine(new QQmlApplicationEngine()),
+    alertTimer(new QTimer())
 {
+    mEngine->rootContext()->setContextProperty("trayIcon", this);
 
+    connect(this->mEngine, &QQmlApplicationEngine::objectCreated, [=](QObject *obj, const QUrl url){
+        obj->setObjectName(url.toString());
+    });
+    if(qApp->allWindows().isEmpty()){
+        loadWindow(QUrl(QString("qrc:/main.qml")));
+    }
+}
+
+void SystemTray::print(QString url)
+{
+    QList<QSerialPortInfo> serialPorts;
+    serialPorts = QSerialPortInfo::availablePorts();
+    for(QSerialPortInfo portInfo:serialPorts){
+        qInfo() << portInfo.portName() << portInfo.description() << portInfo.productIdentifier();
+    }
+    QString filename = QFileDialog::getOpenFileName(0,"Open File",QString(),"PNG File(*.png)");
+    QPrinter printer;
+    QPrintDialog  *dlg  = new QPrintDialog(&printer, 0);
+    if (dlg->exec() == QDialog::Accepted) {
+        QImage  img(filename);
+        QPainter painter(&printer);
+        painter.drawImage(QPoint(0,0), img);
+        painter.end();
+
+    }
 }
 
 void SystemTray::showOnTray()
 {
     QAction *quitAction = new QAction(QObject::tr("&Quit"), this);
-    QAction *openMainAction = new QAction(QObject::tr("Open &Main"), this);
-    QAction *openSecondAction = new QAction(QObject::tr("Open &Second"), this);
+    QAction *openMainAction = new QAction(QObject::tr("&One Click TCR"), this);
+    QAction *openSettingsAction = new QAction(QObject::tr("&Settings"), this);
 
-    QObject::connect(quitAction, SIGNAL(triggered()), parent(), SLOT(quit()));
-    QObject::connect(openMainAction, SIGNAL( triggered()), SLOT(alertOnTray()), Qt::QueuedConnection);
-    QObject::connect(openSecondAction, SIGNAL(triggered()), SLOT(alertOnTray()), Qt::QueuedConnection);
+    connect(quitAction, &QAction::triggered, parent(), &QApplication::quit );
+    connect(this->alertTimer, &QTimer::timeout,this, &SystemTray::alert, Qt::QueuedConnection );
+    connect(openMainAction, &QAction::triggered, this, [=](){
+        loadWindow(QUrl(QString("qrc:/main.qml")));}, Qt::QueuedConnection);
+    connect(openSettingsAction, &QAction::triggered, this, [=](){
+        loadWindow(QUrl(QString("qrc:/second.qml")));}, Qt::QueuedConnection);
 
     trayMenu->addAction(openMainAction);
-    trayMenu->addAction(openSecondAction);
+    trayMenu->addAction(openSettingsAction);
     trayMenu->addSeparator();
     trayMenu->addAction(quitAction);
 
@@ -30,13 +62,18 @@ void SystemTray::showOnTray()
 
 }
 
-void SystemTray::alertOnTray(int instanceId, QByteArray msg)
+void SystemTray::alertOnTray()
 {
-    qInfo()<< "slot called from" << instanceId;
-    qInfo()<< msg;
-    alertTimer = new QTimer(this);
-    connect(alertTimer, &QTimer::timeout, this, &SystemTray::alert, Qt::QueuedConnection );
     alertTimer->start(350);
+}
+
+void SystemTray::unloadWindow(QWindow *window)
+{
+    foreach(QWindow *win, qApp->allWindows()){
+        if(win->objectName() == window->objectName()){
+            win->deleteLater();
+        }
+    }
 }
 
 void SystemTray::alert()
@@ -52,7 +89,42 @@ void SystemTray::alert()
     if (cnt > 6) {
         cnt = 0;
         alertTimer->stop();
-        trayIcon->setIcon(normalIcon);
-        trayIcon->showMessage("Vëmendje!!!", "Aplikacioni eshte duke u egzekutuar.\nPërdorni ikonën ne TaskBar", alertIcon, 15000);
+        loadWindow(QUrl(QString("qrc:/main.qml")));
+        notifyUser();
     }
 }
+
+void SystemTray::loadWindow(QUrl url)
+{
+    bool isLoaded = false;
+    foreach(QWindow *win, qApp->allWindows()){
+        if(win->objectName() == url.toString()){
+            isLoaded = true;
+            switch (win->visibility()) {
+            case QWindow::Hidden:
+                win->show();
+                break;
+            case QWindow::Minimized:
+                win->showNormal();
+                break;
+            default:
+                win->raise();
+
+            }
+        }
+    }
+    if (!isLoaded) {
+        mEngine->load(url);
+    }
+    qInfo() << qApp->allWindows();
+
+
+}
+
+void SystemTray::notifyUser()
+{
+    trayIcon->setIcon(normalIcon);
+    trayIcon->showMessage("Vëmendje!!!", "Aplikacioni eshte duke u egzekutuar.\nPërdorni ikonën ne TaskBar", alertIcon, 15000);
+}
+
+

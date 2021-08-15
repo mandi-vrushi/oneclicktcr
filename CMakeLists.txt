@@ -31,7 +31,7 @@ set(QAPPLICATION_CLASS QApplication CACHE STRING "Inheritance class for SingleAp
 #endif()
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick LinguistTools REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick LinguistTools Gui Widgets Qml QuickControls2 REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core SerialPort PrintSupport Quick LinguistTools Gui Widgets Qml QuickControls2 REQUIRED)
 add_definitions(${Qt6Widgets_DEFINITIONS})
 
 set(TS_FILES OneClickTCR_sq_AL.ts)
@@ -71,7 +71,7 @@ endif()
 target_compile_definitions(OneClickTCR
   PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
 target_link_libraries(OneClickTCR
-  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Qml Qt${QT_VERSION_MAJOR}::QuickControls2 SingleApplication::SingleApplication )
+  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::SerialPort Qt${QT_VERSION_MAJOR}::PrintSupport Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Qml Qt${QT_VERSION_MAJOR}::QuickControls2 SingleApplication::SingleApplication )
 
 set_target_properties(OneClickTCR PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER al.click.onetcr
